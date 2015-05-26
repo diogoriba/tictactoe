@@ -42,6 +42,7 @@ namespace ui
         }
 
         private GameState state;
+        private GameState gameEntryState;
         private double timer;
 
         public Game1()
@@ -81,6 +82,10 @@ namespace ui
             spriteOrigin = new Vector2(0.0f, 0.0f);
             boardOrigin = new Vector2((graphics.PreferredBackBufferWidth / 2) - (boardSize.X / 2),
                                       (graphics.PreferredBackBufferHeight / 2) - (boardSize.Y / 2));
+
+            gameEntryState = GameState.HumanTurn;
+            humanTexture = xTexture;
+            cpuTexture = oTexture;
             EnterState(GameState.MainMenu);
         }
 
@@ -88,6 +93,24 @@ namespace ui
         {
         }
 
+        private Player GetCurrentPlayer(GameState state)
+        {
+            Player current;
+            switch (state)
+            {
+                case GameState.MachineTurn:
+                    current = Player.CPU;
+                    break;
+                case GameState.HumanTurn:
+                    current = Player.Human;
+                    break;
+                default:
+                    current = Player.None;
+                    break;
+            }
+
+            return current;
+        }
         #region State machine
         private void EnterState(GameState state)
         {
@@ -97,9 +120,6 @@ namespace ui
                 case GameState.MainMenu:
                     state = GameState.MainMenu;
                     board = new GameBoard();
-                    board.SetFirstPlayer(Player.Human);
-                    humanTexture = xTexture;
-                    cpuTexture = oTexture;
                     break;
                 case GameState.MachineTurn:
                     timer = 1.0f;
@@ -163,11 +183,11 @@ namespace ui
                     }
                     if (KeyWasPressed(previousKeyboardState, Keys.NumPad4))
                     {
-                        board.SetFirstPlayer(Player.Human);
+                        gameEntryState = GameState.HumanTurn;
                     } 
                     else if (KeyWasPressed(previousKeyboardState, Keys.NumPad5))
                     {
-                        board.SetFirstPlayer(Player.CPU);
+                        gameEntryState = GameState.MachineTurn;
                     }
                     if (KeyWasPressed(previousKeyboardState, Keys.NumPad7))
                     {
@@ -181,17 +201,7 @@ namespace ui
                     }
                     if (KeyWasPressed(previousKeyboardState, Keys.Enter))
                     {
-                        switch (board.CurrentPlayer)
-                        {
-                            case Player.Human:
-                                NextTurn(GameState.HumanTurn);
-                                break;
-                            case Player.CPU:
-                                NextTurn(GameState.MachineTurn);
-                                break;
-                            default:
-                                throw new Exception("First player was not selected");
-                        }
+                        NextTurn(gameEntryState);
                     }
                     break;
                 case GameState.MachineTurn:
@@ -199,8 +209,7 @@ namespace ui
                     if (timer <= 0)
                     {
                         LeaveState(state);
-                        board = Minimax.Play(board);
-                        board.NextPlayer();
+                        board = Minimax.Play(board, GetCurrentPlayer(state));
                         NextTurn(GameState.HumanTurn);
                     }
                     break;
@@ -209,16 +218,14 @@ namespace ui
                     if (IsValidMouseClick(currentMouseState) &&
                         currentMouseState.LeftButton == ButtonState.Pressed && 
                         previousMouseState != null && 
-                        previousMouseState.LeftButton == ButtonState.Released && 
-                        board.CurrentPlayer == Player.Human)
+                        previousMouseState.LeftButton == ButtonState.Released)
                     {
                         LeaveState(state);
                         Vector2 mouseVector = currentMouseState.Position.ToVector2();
                         Vector2 estimatedPosition = (mouseVector - boardOrigin) / cellSize;
                         int x = Between((int)estimatedPosition.X, 0, board.Width - 1);
                         int y = Between((int)estimatedPosition.Y, 0, board.Height - 1);
-                        board.Play(x, y, board.CurrentPlayer);
-                        board.NextPlayer();
+                        board.Play(x, y, GetCurrentPlayer(state));
                         NextTurn(GameState.MachineTurn);
                     }
                     break;

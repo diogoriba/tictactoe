@@ -51,8 +51,7 @@ namespace test.AI
                 {Player.CPU, Player.Human, Player.Human},
                 {Player.Human, Player.CPU, Player.None}
             });
-            board.SetFirstPlayer(Player.Human);
-            int actual = (int)Minimax.Play(board).GetWinner();
+            int actual = (int)Minimax.Play(board, Player.Human).GetWinner();
             Assert.AreEqual(0, actual);
         }
 
@@ -64,8 +63,7 @@ namespace test.AI
                 {Player.CPU, Player.Human, Player.Human},
                 {Player.Human, Player.CPU, Player.None}
             });
-            board.SetFirstPlayer(Player.Human);
-            int actual = (int)Minimax.Play(board).GetWinner();
+            int actual = (int)Minimax.Play(board, Player.Human).GetWinner();
             Assert.AreEqual(1, actual);
         }
     }

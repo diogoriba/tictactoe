@@ -12,4 +12,12 @@ namespace TicTacToe.GameObjects
         Human = 1,
         CPU = -1
     }
+
+    public class PlayerUtils
+    {
+        public static Player Next(Player current)
+        {
+            return (Player)(((int)current) * -1);
+        }
+    }
 }

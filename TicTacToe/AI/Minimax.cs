@@ -27,19 +27,19 @@ namespace TicTacToe.AI
             }
         }
 
-        public static GameBoard Play(GameBoard board, int depth = 0)
+        public static GameBoard Play(GameBoard board, Player current, int depth = 0)
         {
             if (easy && random.Next(0, 100) >= 50)
             {
-                IEnumerable<GameBoard> branches = GetPossibleBoards(board, board.CurrentPlayer);
+                IEnumerable<GameBoard> branches = GetPossibleBoards(board, current);
                 return branches.ElementAt(random.Next(0, branches.Count()));
             }
             else
             {
                 int bestValue;
                 List<GameBoard> bestBoards = new List<GameBoard>();
-                IEnumerable<GameBoard> branches = GetPossibleBoards(board, board.CurrentPlayer);
-                if (board.CurrentPlayer == Player.CPU)
+                IEnumerable<GameBoard> branches = GetPossibleBoards(board, current);
+                if (current == Player.CPU)
                 {
                     // CPU
                     bestValue = int.MaxValue;

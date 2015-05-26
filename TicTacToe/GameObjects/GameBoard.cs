@@ -10,10 +10,9 @@ namespace TicTacToe.GameObjects
     {
         private const byte BOARD_SIZE = 3;
         private Player[,] board;
-        private Player currentPlayer;
 
-        public static GameBoard BEST_X = new GameBoard(new Player[,] { { Player.Human, Player.Human, Player.Human }, { Player.Human, Player.Human, Player.Human }, { Player.Human, Player.Human, Player.Human } }, Player.Human);
-        public static GameBoard BEST_O = new GameBoard(new Player[,] { { Player.CPU, Player.CPU, Player.CPU }, { Player.CPU, Player.CPU, Player.CPU }, { Player.CPU, Player.CPU, Player.CPU } }, Player.CPU);
+        public static GameBoard BEST_X = new GameBoard(new Player[,] { { Player.Human, Player.Human, Player.Human }, { Player.Human, Player.Human, Player.Human }, { Player.Human, Player.Human, Player.Human } });
+        public static GameBoard BEST_O = new GameBoard(new Player[,] { { Player.CPU, Player.CPU, Player.CPU }, { Player.CPU, Player.CPU, Player.CPU }, { Player.CPU, Player.CPU, Player.CPU } });
 
         public GameBoard()
         {
@@ -23,12 +22,6 @@ namespace TicTacToe.GameObjects
         public GameBoard(Player[,] board)
         {
             this.board = board;
-        }
-
-        public GameBoard(Player[,] board, Player currentPlayer)
-        {
-            this.board = board;
-            this.currentPlayer = currentPlayer;
         }
 
         public int Width
@@ -41,34 +34,9 @@ namespace TicTacToe.GameObjects
             get { return this.board.GetLength(1); }
         }
 
-        public Player CurrentPlayer
-        {
-            get { return currentPlayer; }
-        }
-
         public Player this[int x, int y]
         {
             get { return this.board[x, y]; }
-        }
-
-        public void SetFirstPlayer(Player player)
-        {
-            currentPlayer = player;
-        }
-
-        public void NextPlayer()
-        {
-            switch (this.CurrentPlayer)
-            {
-                case Player.CPU:
-                    currentPlayer = Player.Human;
-                    break;
-                case Player.Human:
-                    currentPlayer = Player.CPU;
-                    break;
-                default:
-                    throw new Exception("Trying to switch players while game has not started");
-            }
         }
 
         public bool Play(int line, int column, Player player)
@@ -190,7 +158,7 @@ namespace TicTacToe.GameObjects
         public GameBoard Clone()
         {
             Player[,] clonedMatrix = (Player[,])this.board.Clone();
-            GameBoard newBoard = new GameBoard(clonedMatrix, this.currentPlayer);
+            GameBoard newBoard = new GameBoard(clonedMatrix);
             return newBoard;
         }
 
