@@ -14,13 +14,9 @@ namespace ui
         private SpriteBatch spriteBatch;
         private Texture2D oTexture;
         private Texture2D xTexture;
-        private Texture2D humanTexture;
-        private Texture2D cpuTexture;
         private Texture2D menuTexture;
         private Texture2D lineTexture;
         private SpriteFont font;
-
-        private GameBoard board;
 
         private MouseState previousMouseState;
         private KeyboardState previousKeyboardState;
@@ -33,29 +29,19 @@ namespace ui
         private Vector2 spriteOrigin;
         private Vector2 boardOrigin;
 
-        public enum GameState
-        {
-            MainMenu,
-            MachineTurn,
-            HumanTurn,
-            GameOver
-        }
-
-        private GameState state;
-        private GameState gameEntryState;
-        private double timer;
+        private StateMachine stateMachine;
 
         public Game1()
         {
-            graphics = new GraphicsDeviceManager(this);
+            this.graphics = new GraphicsDeviceManager(this);
 
-            graphics.PreferredBackBufferWidth  = 800;
-            graphics.PreferredBackBufferHeight = 600;
+            this.graphics.PreferredBackBufferWidth  = 800;
+            this.graphics.PreferredBackBufferHeight = 600;
 
-            graphics.ApplyChanges();
+            this.graphics.ApplyChanges();
 
-            Content.RootDirectory = "Content";
-            IsMouseVisible = true;
+            this.Content.RootDirectory = "Content";
+            this.IsMouseVisible = true;
         }
 
         protected override void Initialize()
@@ -65,224 +51,59 @@ namespace ui
 
         protected override void LoadContent()
         {
-            spriteBatch = new SpriteBatch(GraphicsDevice);
-            xTexture = Content.Load<Texture2D>("TicTacToeX");
-            oTexture = Content.Load<Texture2D>("TicTacToeO");
-            menuTexture = Content.Load<Texture2D>("menu");
+            this.spriteBatch = new SpriteBatch(GraphicsDevice);
+            this.xTexture = Content.Load<Texture2D>("TicTacToeX");
+            this.oTexture = Content.Load<Texture2D>("TicTacToeO");
+            this.menuTexture = Content.Load<Texture2D>("menu");
 
-            lineTexture = new Texture2D(GraphicsDevice, 1, 1);
-            lineTexture.SetData<Color>(new Color[] { Color.White });
+            this.lineTexture = new Texture2D(GraphicsDevice, 1, 1);
+            this.lineTexture.SetData<Color>(new Color[] { Color.White });
 
-            font = Content.Load<SpriteFont>("Arial");
+            this.font = Content.Load<SpriteFont>("Arial");
 
-            spriteSize = new Vector2(xTexture.Width, xTexture.Height) * scale;
-            cellSize = new Vector2(spriteSize.X * scale, spriteSize.Y * scale);
-            boardSize = cellSize * 3;
+            this.spriteSize = new Vector2(xTexture.Width, xTexture.Height) * scale;
+            this.cellSize = new Vector2(spriteSize.X * scale, spriteSize.Y * scale);
+            this.boardSize = cellSize * 3;
 
-            spriteOrigin = new Vector2(0.0f, 0.0f);
-            boardOrigin = new Vector2((graphics.PreferredBackBufferWidth / 2) - (boardSize.X / 2),
-                                      (graphics.PreferredBackBufferHeight / 2) - (boardSize.Y / 2));
+            this.spriteOrigin = new Vector2(0.0f, 0.0f);
+            this.boardOrigin = new Vector2((graphics.PreferredBackBufferWidth / 2) - (boardSize.X / 2),
+                                        (graphics.PreferredBackBufferHeight / 2) - (boardSize.Y / 2));
 
-            gameEntryState = GameState.HumanTurn;
-            humanTexture = xTexture;
-            cpuTexture = oTexture;
-            EnterState(GameState.MainMenu);
+            this.stateMachine = new StateMachine(this.graphics.GraphicsDevice.Viewport, boardOrigin, cellSize);
+            this.stateMachine.EnterState(GameState.MainMenu);
         }
 
         protected override void UnloadContent()
         {
         }
 
-        private Player GetCurrentPlayer(GameState state)
-        {
-            Player current;
-            switch (state)
-            {
-                case GameState.MachineTurn:
-                    current = Player.CPU;
-                    break;
-                case GameState.HumanTurn:
-                    current = Player.Human;
-                    break;
-                default:
-                    current = Player.None;
-                    break;
-            }
-
-            return current;
-        }
-        #region State machine
-        private void EnterState(GameState state)
-        {
-            this.state = state;
-            switch (state)
-            {
-                case GameState.MainMenu:
-                    state = GameState.MainMenu;
-                    board = new GameBoard();
-                    break;
-                case GameState.MachineTurn:
-                    timer = 1.0f;
-                    break;
-                case GameState.HumanTurn:
-                    break;
-                case GameState.GameOver:
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        private void LeaveState(GameState state)
-        {
-            switch (state)
-            {
-                case GameState.MainMenu:
-                    break;
-                case GameState.MachineTurn:
-                    break;
-                case GameState.HumanTurn:
-                    break;
-                case GameState.GameOver:
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        private int Between(int value, int min, int max)
-        {
-            return Math.Min(Math.Max(value, min), max);
-        }
-
-        private bool IsValidMouseClick(MouseState mouseState)
-        {
-            bool isXValid = mouseState.Position.X >= 0 && mouseState.Position.X <= graphics.GraphicsDevice.Viewport.Width;
-            bool isYValid = mouseState.Position.Y >= 0 && mouseState.Position.Y <= graphics.GraphicsDevice.Viewport.Height;
-            return isXValid && isYValid;
-        }
-
-        private bool KeyWasPressed(KeyboardState previousKeyboardState, Keys key)
-        {
-            KeyboardState currentKeyboardState = Keyboard.GetState();
-            return previousKeyboardState != null && !previousKeyboardState.IsKeyDown(key) && currentKeyboardState.IsKeyDown(key);
-        }
-
-        private void UpdateState(GameTime gameTime)
-        {
-            switch (state)
-            {
-                case GameState.MainMenu:
-                    if (KeyWasPressed(previousKeyboardState, Keys.NumPad1))
-                    {
-                        Minimax.easy = true;
-                    }
-                    else if (KeyWasPressed(previousKeyboardState, Keys.NumPad2))
-                    {
-                        Minimax.easy = false;
-                    }
-                    if (KeyWasPressed(previousKeyboardState, Keys.NumPad4))
-                    {
-                        gameEntryState = GameState.HumanTurn;
-                    } 
-                    else if (KeyWasPressed(previousKeyboardState, Keys.NumPad5))
-                    {
-                        gameEntryState = GameState.MachineTurn;
-                    }
-                    if (KeyWasPressed(previousKeyboardState, Keys.NumPad7))
-                    {
-                        humanTexture = xTexture;
-                        cpuTexture = oTexture;
-                    }
-                    else if (KeyWasPressed(previousKeyboardState, Keys.NumPad8))
-                    {
-                        humanTexture = oTexture;
-                        cpuTexture = xTexture;
-                    }
-                    if (KeyWasPressed(previousKeyboardState, Keys.Enter))
-                    {
-                        NextTurn(gameEntryState);
-                    }
-                    break;
-                case GameState.MachineTurn:
-                    timer -= gameTime.ElapsedGameTime.TotalSeconds;
-                    if (timer <= 0)
-                    {
-                        LeaveState(state);
-                        board = Minimax.Play(board, GetCurrentPlayer(state));
-                        NextTurn(GameState.HumanTurn);
-                    }
-                    break;
-                case GameState.HumanTurn:
-                    MouseState currentMouseState = Mouse.GetState();
-                    if (IsValidMouseClick(currentMouseState) &&
-                        currentMouseState.LeftButton == ButtonState.Pressed && 
-                        previousMouseState != null && 
-                        previousMouseState.LeftButton == ButtonState.Released)
-                    {
-                        LeaveState(state);
-                        Vector2 mouseVector = currentMouseState.Position.ToVector2();
-                        Vector2 estimatedPosition = (mouseVector - boardOrigin) / cellSize;
-                        int x = Between((int)estimatedPosition.X, 0, board.Width - 1);
-                        int y = Between((int)estimatedPosition.Y, 0, board.Height - 1);
-                        board.Play(x, y, GetCurrentPlayer(state));
-                        NextTurn(GameState.MachineTurn);
-                    }
-                    break;
-                case GameState.GameOver:
-                    if (KeyWasPressed(previousKeyboardState, Keys.Enter))
-                    {
-                        LeaveState(state);
-                        EnterState(GameState.MainMenu);
-                    }
-                    break;
-                default:
-                    break;
-            }
-            previousMouseState = Mouse.GetState();
-            previousKeyboardState = Keyboard.GetState();
-        }
-
-        private void NextTurn(GameState nextState)
-        {
-            if (board.IsOver())
-            {
-                EnterState(GameState.GameOver);
-            }
-            else
-            {
-                EnterState(nextState);
-            }
-        }
-
         private void DrawState(GameTime gameTime)
         {
-            switch (state)
+            switch (this.stateMachine.CurrentState)
             {
                 case GameState.MainMenu:
-                    spriteBatch.Draw(menuTexture, new Rectangle(250, 100, 300, 400), Color.White);
+                    this.spriteBatch.Draw(menuTexture, new Rectangle(250, 100, 300, 400), Color.White);
                     break;
                 case GameState.MachineTurn:
-                    spriteBatch.DrawString(font, "CPU pensando...", new Vector2(10.0f, 10.0f), Color.White);
-                    DrawGrid();
-                    DrawBoardContent();
+                    this.spriteBatch.DrawString(font, "CPU pensando...", new Vector2(10.0f, 10.0f), Color.White);
+                    this.DrawGrid();
+                    this.DrawBoardContent();
                     break;
                 case GameState.HumanTurn:
-                    spriteBatch.DrawString(font, "Sua vez!", new Vector2(10.0f, 10.0f), Color.White);
-                    DrawGrid();
-                    DrawBoardContent();
+                    this.spriteBatch.DrawString(font, "Sua vez!", new Vector2(10.0f, 10.0f), Color.White);
+                    this.DrawGrid();
+                    this.DrawBoardContent();
                     break;
                 case GameState.GameOver:
-                    spriteBatch.DrawString(font, "Ganhador: " + board.GetWinner().ToString(), new Vector2(10.0f, 10.0f), Color.White);
-                    spriteBatch.DrawString(font, "Pressione ENTER para iniciar novo jogo", new Vector2(10.0f, 50.0f), Color.White);
-                    DrawGrid();
-                    DrawBoardContent();
+                    this.spriteBatch.DrawString(font, "Ganhador: " + this.stateMachine.Board.GetWinner().ToString(), new Vector2(10.0f, 10.0f), Color.White);
+                    this.spriteBatch.DrawString(font, "Pressione ENTER para iniciar novo jogo", new Vector2(10.0f, 50.0f), Color.White);
+                    this.DrawGrid();
+                    this.DrawBoardContent();
                     break;
                 default:
                     break;
             }
         }
-        #endregion
 
         protected override void Update(GameTime gameTime)
         {
@@ -290,7 +111,10 @@ namespace ui
                 Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            UpdateState(gameTime);
+            this.stateMachine.UpdateState(gameTime, this.previousKeyboardState, this.previousMouseState);
+            this.previousKeyboardState = Keyboard.GetState();
+            this.previousMouseState = Mouse.GetState();
+
             base.Update(gameTime);
         }
 
@@ -298,29 +122,40 @@ namespace ui
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            spriteBatch.Begin(SpriteSortMode.BackToFront,
-                                BlendState.AlphaBlend,
-                                SamplerState.PointClamp);
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, SamplerState.PointClamp);
             DrawState(gameTime);
             spriteBatch.End();
 
             base.Draw(gameTime);
         }
 
-        private void DrawBoardContent()
+        private Texture2D GetTexture(char token, bool human)
         {
-            for (int line = 0; line < board.Height; line += 1)
+            if ((token == 'X' && human) || (token == 'O' && !human))
             {
-                for (int column = 0; column < board.Width; column += 1)
+                return xTexture;
+            }
+            else if ((token == 'O' && human) || (token =='X' && !human))
+            {
+                return oTexture;
+            }
+            return null;
+        }
+
+        public void DrawBoardContent()
+        {
+            for (int line = 0; line < this.stateMachine.Board.Height; line += 1)
+            {
+                for (int column = 0; column < this.stateMachine.Board.Width; column += 1)
                 {
                     Texture2D textureToUse;
-                    switch (board[line, column])
+                    switch (this.stateMachine.Board[line, column])
                     {
                         case Player.Human:
-                            textureToUse = humanTexture;
+                            textureToUse = GetTexture(this.stateMachine.PlayerToken, true);
                             break;
                         case Player.CPU:
-                            textureToUse = cpuTexture;
+                            textureToUse = GetTexture(this.stateMachine.PlayerToken, false);
                             break;
                         default:
                             continue;
@@ -340,7 +175,7 @@ namespace ui
             }
         }
 
-        private void DrawGrid()
+        public void DrawGrid()
         {
             DrawLine(spriteBatch, boardOrigin + new Vector2(cellSize.X, 0), boardOrigin + new Vector2(cellSize.X, boardSize.Y));
             DrawLine(spriteBatch, boardOrigin + new Vector2(cellSize.X * 2, 0), boardOrigin + new Vector2(cellSize.X * 2, boardSize.Y));
@@ -348,7 +183,7 @@ namespace ui
             DrawLine(spriteBatch, boardOrigin + new Vector2(0, cellSize.Y * 2), boardOrigin + new Vector2(boardSize.X, cellSize.Y * 2));
         }
 
-        void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end)
+        private void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end)
         {
             Vector2 edge = end - start;
             // calculate angle to rotate line
