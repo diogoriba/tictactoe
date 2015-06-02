@@ -31,12 +31,12 @@ namespace TicTacToe.GameObjects
 
         public int Height
         {
-            get { return this.board.GetLength(1); }
+            get { return board.GetLength(1); }
         }
 
         public Player this[int x, int y]
         {
-            get { return this.board[x, y]; }
+            get { return board[x, y]; }
         }
 
         public bool Play(int line, int column, Player player)
@@ -61,7 +61,7 @@ namespace TicTacToe.GameObjects
                 }
             }
 
-            bool hasWinner = (this.GetWinner() != Player.None);
+            bool hasWinner = (GetWinner() != Player.None);
             return isFull || hasWinner;
         }
 
@@ -157,7 +157,7 @@ namespace TicTacToe.GameObjects
 
         public GameBoard Clone()
         {
-            Player[,] clonedMatrix = (Player[,])this.board.Clone();
+            Player[,] clonedMatrix = (Player[,])board.Clone();
             GameBoard newBoard = new GameBoard(clonedMatrix);
             return newBoard;
         }

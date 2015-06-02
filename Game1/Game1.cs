@@ -15,6 +15,7 @@ namespace ui
         private Texture2D oTexture;
         private Texture2D xTexture;
         private Texture2D menuTexture;
+        private Texture2D menuSelectedTexture;
         private Texture2D lineTexture;
         private SpriteFont font;
 
@@ -33,15 +34,15 @@ namespace ui
 
         public Game1()
         {
-            this.graphics = new GraphicsDeviceManager(this);
+            graphics = new GraphicsDeviceManager(this);
 
-            this.graphics.PreferredBackBufferWidth  = 800;
-            this.graphics.PreferredBackBufferHeight = 600;
+            graphics.PreferredBackBufferWidth  = 800;
+            graphics.PreferredBackBufferHeight = 600;
 
-            this.graphics.ApplyChanges();
+            graphics.ApplyChanges();
 
-            this.Content.RootDirectory = "Content";
-            this.IsMouseVisible = true;
+            Content.RootDirectory = "Content";
+            IsMouseVisible = true;
         }
 
         protected override void Initialize()
@@ -51,26 +52,27 @@ namespace ui
 
         protected override void LoadContent()
         {
-            this.spriteBatch = new SpriteBatch(GraphicsDevice);
-            this.xTexture = Content.Load<Texture2D>("TicTacToeX");
-            this.oTexture = Content.Load<Texture2D>("TicTacToeO");
-            this.menuTexture = Content.Load<Texture2D>("menu");
+            spriteBatch = new SpriteBatch(GraphicsDevice);
+            xTexture = Content.Load<Texture2D>("TicTacToeX");
+            oTexture = Content.Load<Texture2D>("TicTacToeO");
+            menuTexture = Content.Load<Texture2D>("menu");
+            menuSelectedTexture = Content.Load<Texture2D>("menuselected");
 
-            this.lineTexture = new Texture2D(GraphicsDevice, 1, 1);
-            this.lineTexture.SetData<Color>(new Color[] { Color.White });
+            lineTexture = new Texture2D(GraphicsDevice, 1, 1);
+            lineTexture.SetData<Color>(new Color[] { Color.White });
 
-            this.font = Content.Load<SpriteFont>("Arial");
+            font = Content.Load<SpriteFont>("Arial");
 
-            this.spriteSize = new Vector2(xTexture.Width, xTexture.Height) * scale;
-            this.cellSize = new Vector2(spriteSize.X * scale, spriteSize.Y * scale);
-            this.boardSize = cellSize * 3;
+            spriteSize = new Vector2(xTexture.Width, xTexture.Height) * scale;
+            cellSize = new Vector2(spriteSize.X * scale, spriteSize.Y * scale);
+            boardSize = cellSize * 3;
 
-            this.spriteOrigin = new Vector2(0.0f, 0.0f);
-            this.boardOrigin = new Vector2((graphics.PreferredBackBufferWidth / 2) - (boardSize.X / 2),
+            spriteOrigin = new Vector2(0.0f, 0.0f);
+            boardOrigin = new Vector2((graphics.PreferredBackBufferWidth / 2) - (boardSize.X / 2),
                                         (graphics.PreferredBackBufferHeight / 2) - (boardSize.Y / 2));
 
-            this.stateMachine = new StateMachine(this.graphics.GraphicsDevice.Viewport, boardOrigin, cellSize);
-            this.stateMachine.EnterState(GameState.MainMenu);
+            stateMachine = new StateMachine(graphics.GraphicsDevice.Viewport, boardOrigin, cellSize);
+            stateMachine.EnterState(GameState.MainMenu);
         }
 
         protected override void UnloadContent()
@@ -79,29 +81,60 @@ namespace ui
 
         private void DrawState(GameTime gameTime)
         {
-            switch (this.stateMachine.CurrentState)
+            switch (stateMachine.CurrentState)
             {
                 case GameState.MainMenu:
-                    this.spriteBatch.Draw(menuTexture, new Rectangle(250, 100, 300, 400), Color.White);
+                    DrawMenu();
                     break;
                 case GameState.MachineTurn:
-                    this.spriteBatch.DrawString(font, "CPU pensando...", new Vector2(10.0f, 10.0f), Color.White);
-                    this.DrawGrid();
-                    this.DrawBoardContent();
+                    spriteBatch.DrawString(font, "CPU pensando...", new Vector2(10.0f, 10.0f), Color.White);
+                    DrawGrid();
+                    DrawBoardContent();
                     break;
                 case GameState.HumanTurn:
-                    this.spriteBatch.DrawString(font, "Sua vez!", new Vector2(10.0f, 10.0f), Color.White);
-                    this.DrawGrid();
-                    this.DrawBoardContent();
+                    spriteBatch.DrawString(font, "Sua vez!", new Vector2(10.0f, 10.0f), Color.White);
+                    DrawGrid();
+                    DrawBoardContent();
                     break;
                 case GameState.GameOver:
-                    this.spriteBatch.DrawString(font, "Ganhador: " + this.stateMachine.Board.GetWinner().ToString(), new Vector2(10.0f, 10.0f), Color.White);
-                    this.spriteBatch.DrawString(font, "Pressione ENTER para iniciar novo jogo", new Vector2(10.0f, 50.0f), Color.White);
-                    this.DrawGrid();
-                    this.DrawBoardContent();
+                    spriteBatch.DrawString(font, "Ganhador: " + stateMachine.Board.GetWinner().ToString(), new Vector2(10.0f, 10.0f), Color.White);
+                    spriteBatch.DrawString(font, "Pressione ENTER para iniciar novo jogo", new Vector2(10.0f, 50.0f), Color.White);
+                    DrawGrid();
+                    DrawBoardContent();
                     break;
                 default:
                     break;
+            }
+        }
+
+        private void DrawMenu()
+        {
+            spriteBatch.Draw(menuTexture, new Rectangle(250, 100, 300, 400), Color.White);
+            if (stateMachine.PlayerToken == 'X')
+            {
+                spriteBatch.Draw(menuSelectedTexture, new Rectangle(250 + 35, 100, 100, 100), Color.White);
+            }
+            else
+            {
+                spriteBatch.Draw(menuSelectedTexture, new Rectangle(250 + 165, 100, 100, 100), Color.White);
+            }
+
+            if (stateMachine.GameEntryState == GameState.HumanTurn)
+            {
+                spriteBatch.Draw(menuSelectedTexture, new Rectangle(250 + 35, 100 + 113, 100, 100), Color.White);
+            }
+            else
+            {
+                spriteBatch.Draw(menuSelectedTexture, new Rectangle(250 + 165, 100 + 113, 100, 100), Color.White);
+            }
+
+            if (Minimax.easy)
+            {
+                spriteBatch.Draw(menuSelectedTexture, new Rectangle(250 + 35, 100 + 226, 100, 100), Color.White);
+            }
+            else
+            {
+                spriteBatch.Draw(menuSelectedTexture, new Rectangle(250 + 165, 100 + 226, 100, 100), Color.White);
             }
         }
 
@@ -111,9 +144,9 @@ namespace ui
                 Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            this.stateMachine.UpdateState(gameTime, this.previousKeyboardState, this.previousMouseState);
-            this.previousKeyboardState = Keyboard.GetState();
-            this.previousMouseState = Mouse.GetState();
+            stateMachine.UpdateState(gameTime, previousKeyboardState, previousMouseState);
+            previousKeyboardState = Keyboard.GetState();
+            previousMouseState = Mouse.GetState();
 
             base.Update(gameTime);
         }
@@ -122,7 +155,7 @@ namespace ui
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, SamplerState.PointClamp);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
             DrawState(gameTime);
             spriteBatch.End();
 
@@ -144,18 +177,18 @@ namespace ui
 
         public void DrawBoardContent()
         {
-            for (int line = 0; line < this.stateMachine.Board.Height; line += 1)
+            for (int line = 0; line < stateMachine.Board.Height; line += 1)
             {
-                for (int column = 0; column < this.stateMachine.Board.Width; column += 1)
+                for (int column = 0; column < stateMachine.Board.Width; column += 1)
                 {
                     Texture2D textureToUse;
-                    switch (this.stateMachine.Board[line, column])
+                    switch (stateMachine.Board[line, column])
                     {
                         case Player.Human:
-                            textureToUse = GetTexture(this.stateMachine.PlayerToken, true);
+                            textureToUse = GetTexture(stateMachine.PlayerToken, true);
                             break;
                         case Player.CPU:
-                            textureToUse = GetTexture(this.stateMachine.PlayerToken, false);
+                            textureToUse = GetTexture(stateMachine.PlayerToken, false);
                             break;
                         default:
                             continue;
@@ -203,7 +236,6 @@ namespace ui
                 new Vector2(0, 0), // point in line about which to rotate
                 SpriteEffects.None,
                 0);
-
         }
     }
 }

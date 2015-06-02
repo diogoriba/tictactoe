@@ -40,11 +40,18 @@ namespace ui
             set { board = value; }
         }
 
+        public GameState GameEntryState
+        {
+            get { return gameEntryState; }
+            set { gameEntryState = value; }
+        }
+
         public char PlayerToken { get; set; }
 
         public StateMachine(Viewport viewport, Vector2 boardOrigin, Vector2 cellSize)
         {
             this.currentState = GameState.MainMenu;
+            this.gameEntryState = GameState.HumanTurn;
             this.viewport = viewport;
             this.boardOrigin = boardOrigin;
             this.cellSize = cellSize;
@@ -53,14 +60,14 @@ namespace ui
 
         public void EnterState(GameState state)
         {
-            this.currentState = state;
-            switch (this.currentState)
+            currentState = state;
+            switch (currentState)
             {
                 case GameState.MainMenu:
-                    this.board = new GameBoard();
+                    board = new GameBoard();
                     break;
                 case GameState.MachineTurn:
-                    this.timer = 1.0f;
+                    timer = 1.0f;
                     break;
                 case GameState.HumanTurn:
                     break;
@@ -95,8 +102,8 @@ namespace ui
 
         private bool IsValidMouseClick(MouseState mouseState)
         {
-            bool isXValid = mouseState.Position.X >= 0 && mouseState.Position.X <= this.viewport.Width;
-            bool isYValid = mouseState.Position.Y >= 0 && mouseState.Position.Y <= this.viewport.Height;
+            bool isXValid = mouseState.Position.X >= 0 && mouseState.Position.X <= viewport.Width;
+            bool isYValid = mouseState.Position.Y >= 0 && mouseState.Position.Y <= viewport.Height;
             return isXValid && isYValid;
         }
 
@@ -108,7 +115,7 @@ namespace ui
 
         public void UpdateState(GameTime gameTime, KeyboardState previousKeyboardState, MouseState previousMouseState)
         {
-            switch (this.currentState)
+            switch (currentState)
             {
                 case GameState.MainMenu:
                     if (KeyWasPressed(previousKeyboardState, Keys.NumPad1))
@@ -121,19 +128,19 @@ namespace ui
                     }
                     if (KeyWasPressed(previousKeyboardState, Keys.NumPad4))
                     {
-                        this.gameEntryState = GameState.HumanTurn;
+                        gameEntryState = GameState.HumanTurn;
                     }
                     else if (KeyWasPressed(previousKeyboardState, Keys.NumPad5))
                     {
-                        this.gameEntryState = GameState.MachineTurn;
+                        gameEntryState = GameState.MachineTurn;
                     }
                     if (KeyWasPressed(previousKeyboardState, Keys.NumPad7))
                     {
-                        this.PlayerToken = 'X';
+                        PlayerToken = 'X';
                     }
                     else if (KeyWasPressed(previousKeyboardState, Keys.NumPad8))
                     {
-                        this.PlayerToken = 'O';
+                        PlayerToken = 'O';
                     }
                     if (KeyWasPressed(previousKeyboardState, Keys.Enter))
                     {
@@ -141,10 +148,10 @@ namespace ui
                     }
                     break;
                 case GameState.MachineTurn:
-                    this.timer -= gameTime.ElapsedGameTime.TotalSeconds;
+                    timer -= gameTime.ElapsedGameTime.TotalSeconds;
                     if (timer <= 0)
                     {
-                        LeaveState(this.currentState);
+                        LeaveState(currentState);
                         board = Minimax.Play(board, Player.CPU);
                         NextTurn(GameState.HumanTurn);
                     }
@@ -156,7 +163,7 @@ namespace ui
                         previousMouseState != null &&
                         previousMouseState.LeftButton == ButtonState.Released)
                     {
-                        LeaveState(this.currentState);
+                        LeaveState(currentState);
                         Vector2 mouseVector = currentMouseState.Position.ToVector2();
                         Vector2 estimatedPosition = (mouseVector - boardOrigin) / cellSize;
                         int x = Between((int)estimatedPosition.X, 0, board.Width - 1);
@@ -168,7 +175,7 @@ namespace ui
                 case GameState.GameOver:
                     if (KeyWasPressed(previousKeyboardState, Keys.Enter))
                     {
-                        LeaveState(this.currentState);
+                        LeaveState(currentState);
                         EnterState(GameState.MainMenu);
                     }
                     break;
